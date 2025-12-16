@@ -666,6 +666,7 @@
             document.getElementById('metricDate').value = today;
             
             await loadAllData();
+            loadProfileForm(); // Load profile data into form
             await loadWhoopData();
             updateDashboard();
             renderContainerTracking();
@@ -834,8 +835,35 @@
             document.getElementById('profile2Btn').classList.toggle('active', profileId === 'user2');
             
             await loadAllData();
+            loadProfileForm(); // Load the profile data into form
             updateDashboard();
             renderContainerTracking();
+        }
+
+        // Load profile data into form
+        function loadProfileForm() {
+            const profile = profiles[currentProfile];
+            if (profile) {
+                document.getElementById('profileName').value = profile.name || '';
+                document.getElementById('profileGender').value = profile.gender || 'male';
+                document.getElementById('profileAge').value = profile.age || '';
+                document.getElementById('profileHeight').value = profile.height || '';
+                document.getElementById('profileWeight').value = profile.weight || '';
+                document.getElementById('profileGoalWeight').value = profile.goalWeight || '';
+                
+                // Show calculated plan if profile exists
+                if (profile.targetCalories) {
+                    displayCalculatedPlan(profile);
+                }
+            } else {
+                // Clear form for new profile
+                document.getElementById('profileName').value = '';
+                document.getElementById('profileAge').value = '';
+                document.getElementById('profileHeight').value = '';
+                document.getElementById('profileWeight').value = '';
+                document.getElementById('profileGoalWeight').value = '';
+                document.getElementById('calculatedPlan').classList.add('hidden');
+            }
         }
 
         // Switch tab
@@ -881,6 +909,7 @@
             );
 
             profile.targetCalories = Math.round(targetCalories);
+            profile.planCalories = closestPlan;
             profile.containers = containerPlans[closestPlan];
 
             profiles[currentProfile] = profile;
@@ -888,9 +917,8 @@
             // Save to Firebase
             await window.dbSet(window.dbRef(window.db, `profiles/${currentProfile}`), profile);
 
-            document.getElementById('calculatedPlan').classList.remove('hidden');
-            document.getElementById('displayCalories').textContent = profile.targetCalories;
-            document.getElementById('displayContainers').textContent = Object.values(profile.containers).reduce((a, b) => a + b, 0);
+            // Display the plan
+            displayCalculatedPlan(profile);
 
             // Update button label
             const profileNum = currentProfile === 'user1' ? 1 : 2;
@@ -898,6 +926,41 @@
 
             alert('✅ Profile saved successfully!');
             renderContainerTracking();
+        }
+
+        // Display calculated plan with container breakdown
+        function displayCalculatedPlan(profile) {
+            document.getElementById('calculatedPlan').classList.remove('hidden');
+            document.getElementById('displayCalories').textContent = profile.targetCalories;
+            document.getElementById('displayContainers').textContent = Object.values(profile.containers).reduce((a, b) => a + b, 0);
+
+            // Show container breakdown
+            let containersHTML = '<div style="margin-top: 20px;"><h4 style="color: var(--primary); margin-bottom: 15px;">Daily Container Plan:</h4>';
+            containersHTML += '<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">';
+            
+            for (const [key, info] of Object.entries(containers)) {
+                const count = profile.containers[key];
+                containersHTML += `
+                    <div style="background: ${info.color}20; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid ${info.color};">
+                        <div style="font-weight: bold; color: ${info.color}; font-size: 1.5em;">${count}</div>
+                        <div style="font-size: 0.9em; color: var(--text);">${info.name}</div>
+                        <div style="font-size: 0.8em; color: var(--text-light);">${info.type}</div>
+                    </div>
+                `;
+            }
+            
+            containersHTML += '</div></div>';
+            
+            // Add to the calculated plan div
+            const planDiv = document.getElementById('calculatedPlan');
+            const existingBreakdown = planDiv.querySelector('.container-breakdown');
+            if (existingBreakdown) {
+                existingBreakdown.remove();
+            }
+            const breakdownDiv = document.createElement('div');
+            breakdownDiv.className = 'container-breakdown';
+            breakdownDiv.innerHTML = containersHTML;
+            planDiv.appendChild(breakdownDiv);
         }
 
         // Save metrics
@@ -1004,19 +1067,35 @@
         const WHOOP_API = 'https://whoop-backend-production.up.railway.app';
 
         async function loadWhoopData() {
+            console.log('🔄 Loading Whoop data from:', WHOOP_API);
+            
             try {
-                const response = await fetch(`${WHOOP_API}/api/today`);
+                const response = await fetch(`${WHOOP_API}/api/today`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📡 Whoop response status:', response.status);
+                
                 if (!response.ok) {
-                    console.log('Whoop not connected');
+                    console.log('❌ Whoop not connected or error');
                     document.getElementById('whoopRecovery').textContent = 'Connect';
+                    document.getElementById('whoopRecovery').style.cursor = 'pointer';
+                    document.getElementById('whoopRecovery').onclick = () => {
+                        window.open(`${WHOOP_API}/auth/whoop`, '_blank');
+                    };
                     return;
                 }
                 
                 const data = await response.json();
-                console.log('✅ Whoop data loaded');
+                console.log('✅ Whoop data received:', data);
                 
                 // Display recovery
                 let recovery = data.recovery?.recoveryScore;
+                console.log('Recovery score:', recovery);
+                
                 if (recovery !== null && recovery !== undefined) {
                     document.getElementById('whoopRecovery').textContent = Math.round(recovery) + '%';
                     const recoveryCard = document.getElementById('recoveryCard');
@@ -1028,26 +1107,31 @@
                         recoveryCard.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
                     }
                 } else {
+                    console.log('No recovery data, showing N/A');
                     document.getElementById('whoopRecovery').textContent = 'N/A';
                 }
                 
                 // Display strain
                 if (data.strain?.strain) {
+                    console.log('Strain:', data.strain.strain);
                     document.getElementById('whoopStrain').textContent = data.strain.strain.toFixed(1);
                 } else {
+                    console.log('No strain data');
                     document.getElementById('whoopStrain').textContent = 'N/A';
                 }
                 
                 // Display sleep
                 if (data.sleep?.sleepPerformance) {
+                    console.log('Sleep:', data.sleep.sleepPerformance);
                     document.getElementById('whoopSleep').textContent = Math.round(data.sleep.sleepPerformance) + '%';
                 } else {
+                    console.log('No sleep data');
                     document.getElementById('whoopSleep').textContent = 'N/A';
                 }
                 
             } catch (error) {
-                console.log('Whoop error:', error.message);
-                document.getElementById('whoopRecovery').textContent = 'Connect';
+                console.error('❌ Whoop error:', error);
+                document.getElementById('whoopRecovery').textContent = 'Error';
                 document.getElementById('whoopRecovery').style.cursor = 'pointer';
                 document.getElementById('whoopRecovery').onclick = () => {
                     window.open(`${WHOOP_API}/auth/whoop`, '_blank');
