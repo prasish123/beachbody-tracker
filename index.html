@@ -880,12 +880,38 @@
         }
 
         async function loadData() {
+            // Check if window.storage is available
+            const hasCloudStorage = window.storage && typeof window.storage.get === 'function';
+            
+            if (!hasCloudStorage) {
+                console.log('Cloud storage not available, using localStorage');
+                try {
+                    const savedProfiles = localStorage.getItem('bb_profiles');
+                    const savedLogs = localStorage.getItem(`bb_logs_${currentProfile}`);
+                    const savedMetrics = localStorage.getItem(`bb_metrics_${currentProfile}`);
+                    
+                    profiles = savedProfiles ? JSON.parse(savedProfiles) : { user1: null, user2: null };
+                    dailyLogs = savedLogs ? JSON.parse(savedLogs) : {};
+                    metrics = savedMetrics ? JSON.parse(savedMetrics) : {};
+                    return;
+                } catch (error) {
+                    console.log('Error loading from localStorage:', error);
+                    profiles = { user1: null, user2: null };
+                    dailyLogs = {};
+                    metrics = {};
+                    return;
+                }
+            }
+
+            // Try cloud storage
             try {
                 // Load profiles (try to get, if fails it means key doesn't exist yet)
                 try {
                     const profilesData = await window.storage.get('bb_profiles');
                     if (profilesData && profilesData.value) {
                         profiles = JSON.parse(profilesData.value);
+                    } else {
+                        profiles = { user1: null, user2: null };
                     }
                 } catch (e) {
                     console.log('No profiles data yet, initializing...');
@@ -897,6 +923,8 @@
                     const logsData = await window.storage.get(`bb_logs_${currentProfile}`);
                     if (logsData && logsData.value) {
                         dailyLogs = JSON.parse(logsData.value);
+                    } else {
+                        dailyLogs = {};
                     }
                 } catch (e) {
                     console.log('No logs data yet, initializing...');
@@ -908,38 +936,69 @@
                     const metricsData = await window.storage.get(`bb_metrics_${currentProfile}`);
                     if (metricsData && metricsData.value) {
                         metrics = JSON.parse(metricsData.value);
+                    } else {
+                        metrics = {};
                     }
                 } catch (e) {
                     console.log('No metrics data yet, initializing...');
                     metrics = {};
                 }
             } catch (error) {
-                console.log('Error loading data, using defaults:', error);
-                profiles = { user1: null, user2: null };
-                dailyLogs = {};
-                metrics = {};
+                console.log('Error loading from cloud storage, trying localStorage fallback:', error);
+                // Try localStorage as fallback
+                try {
+                    const savedProfiles = localStorage.getItem('bb_profiles');
+                    const savedLogs = localStorage.getItem(`bb_logs_${currentProfile}`);
+                    const savedMetrics = localStorage.getItem(`bb_metrics_${currentProfile}`);
+                    
+                    profiles = savedProfiles ? JSON.parse(savedProfiles) : { user1: null, user2: null };
+                    dailyLogs = savedLogs ? JSON.parse(savedLogs) : {};
+                    metrics = savedMetrics ? JSON.parse(savedMetrics) : {};
+                } catch (localError) {
+                    console.log('Error loading from localStorage:', localError);
+                    profiles = { user1: null, user2: null };
+                    dailyLogs = {};
+                    metrics = {};
+                }
             }
         }
 
         async function saveData() {
+            // Check if window.storage is available
+            if (!window.storage || typeof window.storage.set !== 'function') {
+                console.log('Cloud storage not available, using localStorage');
+                try {
+                    localStorage.setItem('bb_profiles', JSON.stringify(profiles));
+                    localStorage.setItem(`bb_logs_${currentProfile}`, JSON.stringify(dailyLogs));
+                    localStorage.setItem(`bb_metrics_${currentProfile}`, JSON.stringify(metrics));
+                    console.log('Data saved to localStorage successfully');
+                    return;
+                } catch (error) {
+                    console.error('localStorage error:', error);
+                    alert('Error saving data. Please check your browser settings and try again.');
+                    return;
+                }
+            }
+
+            // Try cloud storage with retry logic
             try {
-                // Save with retry logic
                 let retries = 3;
                 while (retries > 0) {
                     try {
                         await window.storage.set('bb_profiles', JSON.stringify(profiles));
                         await window.storage.set(`bb_logs_${currentProfile}`, JSON.stringify(dailyLogs));
                         await window.storage.set(`bb_metrics_${currentProfile}`, JSON.stringify(metrics));
-                        console.log('Data saved successfully');
+                        console.log('Data saved to cloud storage successfully');
                         return; // Success
                     } catch (e) {
                         retries--;
+                        console.log(`Save attempt failed, ${retries} retries left:`, e.message);
                         if (retries === 0) throw e;
                         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
                     }
                 }
             } catch (error) {
-                console.error('Error saving data:', error);
+                console.error('Cloud storage error:', error);
                 // Fallback to localStorage
                 try {
                     localStorage.setItem('bb_profiles', JSON.stringify(profiles));
@@ -947,7 +1006,8 @@
                     localStorage.setItem(`bb_metrics_${currentProfile}`, JSON.stringify(metrics));
                     console.log('Data saved to localStorage as fallback');
                 } catch (localError) {
-                    alert('Error saving data. Your changes may not be saved. Please try refreshing the page.');
+                    console.error('localStorage error:', localError);
+                    alert('Error saving data. Please check your browser settings and try again.');
                 }
             }
         }
