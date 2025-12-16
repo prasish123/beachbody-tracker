@@ -667,11 +667,22 @@
             
             await loadAllData();
             loadProfileForm(); // Load profile data into form
+            updateProfileButtonLabels(); // Update button labels with names
             await loadWhoopData();
             updateDashboard();
             renderContainerTracking();
             
             console.log('✅ App initialized');
+        }
+
+        // Update profile button labels
+        function updateProfileButtonLabels() {
+            if (profiles.user1 && profiles.user1.name) {
+                document.getElementById('profile1Btn').textContent = profiles.user1.name;
+            }
+            if (profiles.user2 && profiles.user2.name) {
+                document.getElementById('profile2Btn').textContent = profiles.user2.name;
+            }
         }
 
         // Firebase data loading
@@ -1070,72 +1081,114 @@
             console.log('🔄 Loading Whoop data from:', WHOOP_API);
             
             try {
-                const response = await fetch(`${WHOOP_API}/api/today`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                const today = new Date().toISOString().split('T')[0];
+                console.log('📅 Today:', today);
                 
-                console.log('📡 Whoop response status:', response.status);
-                
-                if (!response.ok) {
-                    console.log('❌ Whoop not connected or error');
-                    document.getElementById('whoopRecovery').textContent = 'Connect';
-                    document.getElementById('whoopRecovery').style.cursor = 'pointer';
-                    document.getElementById('whoopRecovery').onclick = () => {
-                        window.open(`${WHOOP_API}/auth/whoop`, '_blank');
-                    };
-                    return;
-                }
-                
-                const data = await response.json();
-                console.log('✅ Whoop data received:', data);
-                
-                // Display recovery
-                let recovery = data.recovery?.recoveryScore;
-                console.log('Recovery score:', recovery);
-                
-                if (recovery !== null && recovery !== undefined) {
-                    document.getElementById('whoopRecovery').textContent = Math.round(recovery) + '%';
-                    const recoveryCard = document.getElementById('recoveryCard');
-                    if (recovery >= 67) {
-                        recoveryCard.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                    } else if (recovery >= 34) {
-                        recoveryCard.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                // Fetch recovery
+                try {
+                    const recoveryResponse = await fetch(`${WHOOP_API}/api/recovery/${today}`);
+                    console.log('📡 Recovery response status:', recoveryResponse.status);
+                    
+                    if (recoveryResponse.ok) {
+                        const recoveryData = await recoveryResponse.json();
+                        console.log('✅ Recovery data:', recoveryData);
+                        
+                        if (recoveryData && recoveryData.recoveryScore !== null && recoveryData.recoveryScore !== undefined) {
+                            const recovery = recoveryData.recoveryScore;
+                            document.getElementById('whoopRecovery').textContent = Math.round(recovery) + '%';
+                            
+                            const recoveryCard = document.getElementById('recoveryCard');
+                            if (recovery >= 67) {
+                                recoveryCard.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                            } else if (recovery >= 34) {
+                                recoveryCard.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                            } else {
+                                recoveryCard.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                            }
+                        } else {
+                            console.log('No recovery score available');
+                            document.getElementById('whoopRecovery').textContent = 'N/A';
+                        }
+                    } else if (recoveryResponse.status === 401) {
+                        console.log('❌ Not authenticated, showing Connect button');
+                        document.getElementById('whoopRecovery').textContent = 'Connect';
+                        document.getElementById('whoopRecovery').style.cursor = 'pointer';
+                        document.getElementById('whoopRecovery').onclick = () => {
+                            window.open(`${WHOOP_API}/auth/whoop`, '_blank');
+                        };
                     } else {
-                        recoveryCard.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                        console.log('Recovery endpoint error:', recoveryResponse.status);
+                        document.getElementById('whoopRecovery').textContent = 'N/A';
                     }
-                } else {
-                    console.log('No recovery data, showing N/A');
+                } catch (e) {
+                    console.log('Recovery fetch error:', e);
                     document.getElementById('whoopRecovery').textContent = 'N/A';
                 }
                 
-                // Display strain
-                if (data.strain?.strain) {
-                    console.log('Strain:', data.strain.strain);
-                    document.getElementById('whoopStrain').textContent = data.strain.strain.toFixed(1);
-                } else {
-                    console.log('No strain data');
+                // Fetch strain
+                try {
+                    const strainResponse = await fetch(`${WHOOP_API}/api/strain/${today}`);
+                    console.log('📡 Strain response status:', strainResponse.status);
+                    
+                    if (strainResponse.ok) {
+                        const strainData = await strainResponse.json();
+                        console.log('✅ Strain data:', strainData);
+                        
+                        if (strainData && strainData.strain !== null && strainData.strain !== undefined) {
+                            document.getElementById('whoopStrain').textContent = strainData.strain.toFixed(1);
+                        } else {
+                            console.log('No strain data available');
+                            document.getElementById('whoopStrain').textContent = 'N/A';
+                        }
+                    } else {
+                        console.log('Strain endpoint error:', strainResponse.status);
+                        document.getElementById('whoopStrain').textContent = 'N/A';
+                    }
+                } catch (e) {
+                    console.log('Strain fetch error:', e);
                     document.getElementById('whoopStrain').textContent = 'N/A';
                 }
                 
-                // Display sleep
-                if (data.sleep?.sleepPerformance) {
-                    console.log('Sleep:', data.sleep.sleepPerformance);
-                    document.getElementById('whoopSleep').textContent = Math.round(data.sleep.sleepPerformance) + '%';
-                } else {
-                    console.log('No sleep data');
+                // Fetch sleep - try today first, then yesterday
+                try {
+                    let sleepResponse = await fetch(`${WHOOP_API}/api/sleep/${today}`);
+                    console.log('📡 Sleep (today) response status:', sleepResponse.status);
+                    
+                    // If today returns 404, try yesterday (sleep is calculated in the morning)
+                    if (sleepResponse.status === 404) {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const yesterdayStr = yesterday.toISOString().split('T')[0];
+                        console.log('⏮️ Trying yesterday:', yesterdayStr);
+                        
+                        sleepResponse = await fetch(`${WHOOP_API}/api/sleep/${yesterdayStr}`);
+                        console.log('📡 Sleep (yesterday) response status:', sleepResponse.status);
+                    }
+                    
+                    if (sleepResponse.ok) {
+                        const sleepData = await sleepResponse.json();
+                        console.log('✅ Sleep data:', sleepData);
+                        
+                        if (sleepData && sleepData.sleepPerformance !== null && sleepData.sleepPerformance !== undefined) {
+                            document.getElementById('whoopSleep').textContent = Math.round(sleepData.sleepPerformance) + '%';
+                        } else {
+                            console.log('No sleep performance data');
+                            document.getElementById('whoopSleep').textContent = 'N/A';
+                        }
+                    } else {
+                        console.log('Sleep endpoint error:', sleepResponse.status);
+                        document.getElementById('whoopSleep').textContent = 'N/A';
+                    }
+                } catch (e) {
+                    console.log('Sleep fetch error:', e);
                     document.getElementById('whoopSleep').textContent = 'N/A';
                 }
                 
             } catch (error) {
-                console.error('❌ Whoop error:', error);
+                console.error('❌ Whoop general error:', error);
                 document.getElementById('whoopRecovery').textContent = 'Error';
-                document.getElementById('whoopRecovery').style.cursor = 'pointer';
-                document.getElementById('whoopRecovery').onclick = () => {
-                    window.open(`${WHOOP_API}/auth/whoop`, '_blank');
-                };
+                document.getElementById('whoopStrain').textContent = 'N/A';
+                document.getElementById('whoopSleep').textContent = 'N/A';
             }
         }
 
