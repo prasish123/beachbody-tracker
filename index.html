@@ -321,6 +321,10 @@
             display: none;
         }
 
+        .metric-section {
+            animation: fadeIn 0.3s;
+        }
+
         /* Loading spinner */
         .spinner {
             border: 3px solid var(--border);
@@ -568,25 +572,245 @@
 
             <!-- Body Metrics Tab -->
             <div class="tab-content" id="metricsTab">
-                <h2 class="section-title">Body Metrics</h2>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" id="metricDate">
-                    </div>
-                    <div class="form-group">
-                        <label>Weight (kg)</label>
-                        <input type="number" id="metricWeight" placeholder="Weight" step="0.1">
-                    </div>
-                    <div class="form-group">
-                        <label>Body Fat %</label>
-                        <input type="number" id="metricBodyFat" placeholder="Body fat %" step="0.1">
+                <h2 class="section-title">📊 Health & Body Metrics</h2>
+
+                <!-- Goal Progress Tracker -->
+                <div class="info-box" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; margin-bottom: 30px;">
+                    <h3 style="color: white; margin-bottom: 15px;">🎯 Goal Progress</h3>
+                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">Current Weight</div>
+                                <div style="font-size: 1.8em; font-weight: bold;" id="goalCurrentWeight">--</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">Goal Weight</div>
+                                <div style="font-size: 1.8em; font-weight: bold;" id="goalTargetWeight">--</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">To Lose</div>
+                                <div style="font-size: 1.8em; font-weight: bold;" id="goalToLose">--</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">Est. Days</div>
+                                <div style="font-size: 1.8em; font-weight: bold;" id="goalDays">--</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">Target Date</div>
+                                <div style="font-size: 1.3em; font-weight: bold;" id="goalDate">--</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar" style="height: 15px; background: rgba(255,255,255,0.3);">
+                            <div class="progress-fill" id="goalProgress" style="width: 0%; background: white;"></div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; font-size: 1.2em; font-weight: bold;" id="goalProgressText">0% Complete</div>
                     </div>
                 </div>
 
-                <button class="btn" onclick="saveMetrics()">💾 Save Metrics</button>
+                <!-- Quick Entry Tabs -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="tab active" onclick="switchMetricTab('basic')" id="basicMetricTab">Basic Metrics</button>
+                    <button class="tab" onclick="switchMetricTab('vitals')" id="vitalsMetricTab">Vitals</button>
+                    <button class="tab" onclick="switchMetricTab('labs')" id="labsMetricTab">Lab Work</button>
+                    <button class="tab" onclick="switchMetricTab('symptoms')" id="symptomsMetricTab">Symptoms</button>
+                    <button class="tab" onclick="switchMetricTab('files')" id="filesMetricTab">Files & Photos</button>
+                </div>
 
+                <!-- Basic Metrics Section -->
+                <div id="basicMetricSection" class="metric-section">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">⚖️ Basic Body Metrics</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="metricDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" id="metricWeight" placeholder="Weight" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Body Fat %</label>
+                            <input type="number" id="metricBodyFat" placeholder="Body fat %" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Muscle Mass (kg)</label>
+                            <input type="number" id="metricMuscleMass" placeholder="Muscle mass" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>BMI</label>
+                            <input type="number" id="metricBMI" placeholder="BMI" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Visceral Fat</label>
+                            <input type="number" id="metricVisceralFat" placeholder="Visceral fat" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist (cm)</label>
+                            <input type="number" id="metricWaist" placeholder="Waist" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Chest (cm)</label>
+                            <input type="number" id="metricChest" placeholder="Chest" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Arms (cm)</label>
+                            <input type="number" id="metricArms" placeholder="Arms" step="0.5">
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>Notes</label>
+                        <textarea id="metricNotes" rows="3" placeholder="Any notes about today's measurements..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Vitals Section -->
+                <div id="vitalsMetricSection" class="metric-section hidden">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">💓 Vital Signs</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Blood Pressure (Systolic)</label>
+                            <input type="number" id="metricBPSystolic" placeholder="120" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Blood Pressure (Diastolic)</label>
+                            <input type="number" id="metricBPDiastolic" placeholder="80" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Heart Rate (bpm)</label>
+                            <input type="number" id="metricHeartRate" placeholder="70" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Blood Glucose (mg/dL)</label>
+                            <input type="number" id="metricGlucose" placeholder="100" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>SpO2 %</label>
+                            <input type="number" id="metricSpO2" placeholder="98" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Temperature (°F)</label>
+                            <input type="number" id="metricTemp" placeholder="98.6" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lab Work Section -->
+                <div id="labsMetricSection" class="metric-section hidden">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">🧪 Lab Work & Tests</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Cholesterol Total (mg/dL)</label>
+                            <input type="number" id="metricCholesterol" placeholder="200" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>LDL (mg/dL)</label>
+                            <input type="number" id="metricLDL" placeholder="100" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>HDL (mg/dL)</label>
+                            <input type="number" id="metricHDL" placeholder="60" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Triglycerides (mg/dL)</label>
+                            <input type="number" id="metricTriglycerides" placeholder="150" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>HbA1c %</label>
+                            <input type="number" id="metricHbA1c" placeholder="5.7" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Vitamin D (ng/mL)</label>
+                            <input type="number" id="metricVitaminD" placeholder="30" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Calcium Score</label>
+                            <input type="number" id="metricCalciumScore" placeholder="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Creatinine (mg/dL)</label>
+                            <input type="number" id="metricCreatinine" placeholder="1.0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>TSH (mIU/L)</label>
+                            <input type="number" id="metricTSH" placeholder="2.0" step="0.1">
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>Lab Notes</label>
+                        <textarea id="metricLabNotes" rows="3" placeholder="Doctor's comments, test results, concerns..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Symptoms Section -->
+                <div id="symptomsMetricSection" class="metric-section hidden">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">🩺 Symptoms & Health Issues</h3>
+                    
+                    <div class="form-group">
+                        <label>Knee Pain (0-10)</label>
+                        <input type="range" id="metricKneePain" min="0" max="10" value="0" 
+                               oninput="document.getElementById('kneePainValue').textContent = this.value"
+                               style="width: 100%;">
+                        <div style="text-align: center; font-size: 1.5em; font-weight: bold; color: var(--primary);" id="kneePainValue">0</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Hair Loss Severity (0-10)</label>
+                        <input type="range" id="metricHairLoss" min="0" max="10" value="0" 
+                               oninput="document.getElementById('hairLossValue').textContent = this.value"
+                               style="width: 100%;">
+                        <div style="text-align: center; font-size: 1.5em; font-weight: bold; color: var(--primary);" id="hairLossValue">0</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Energy Level (0-10)</label>
+                        <input type="range" id="metricEnergy" min="0" max="10" value="5" 
+                               oninput="document.getElementById('energyValue').textContent = this.value"
+                               style="width: 100%;">
+                        <div style="text-align: center; font-size: 1.5em; font-weight: bold; color: var(--primary);" id="energyValue">5</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sleep Quality (0-10)</label>
+                        <input type="range" id="metricSleepQuality" min="0" max="10" value="5" 
+                               oninput="document.getElementById('sleepQualityValue').textContent = this.value"
+                               style="width: 100%;">
+                        <div style="text-align: center; font-size: 1.5em; font-weight: bold; color: var(--primary);" id="sleepQualityValue">5</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Other Symptoms/Notes</label>
+                        <textarea id="metricSymptoms" rows="4" placeholder="Headaches, joint pain, mood, digestion, etc..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Files & Photos Section -->
+                <div id="filesMetricSection" class="metric-section hidden">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">📁 Files & Photos</h3>
+                    
+                    <div class="info-box">
+                        <h4 style="margin-bottom: 10px;">📸 Progress Photo</h4>
+                        <input type="file" id="metricPhoto" accept="image/*" style="width: 100%; padding: 10px;">
+                        <div id="photoPreview" style="margin-top: 15px; text-align: center;"></div>
+                    </div>
+
+                    <div class="info-box" style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px;">📄 Upload Documents</h4>
+                        <p style="margin-bottom: 10px; color: var(--text-light);">Lab PDFs, ECG reports, Renpho data, etc.</p>
+                        <input type="file" id="metricFiles" accept=".pdf,.jpg,.png,.csv" multiple style="width: 100%; padding: 10px;">
+                        <div id="filesPreview" style="margin-top: 15px;"></div>
+                    </div>
+
+                    <div class="info-box" style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px;">📊 Import Renpho CSV</h4>
+                        <p style="margin-bottom: 10px; color: var(--text-light);">Export from Renpho app → Upload here to import historical data</p>
+                        <input type="file" id="renphoCSV" accept=".csv" style="width: 100%; padding: 10px;">
+                        <button class="btn" onclick="importRenphoCSV()" style="margin-top: 10px;">Import Renpho Data</button>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="saveMetrics()" style="margin-top: 20px;">💾 Save All Metrics</button>
+
+                <!-- Timeline -->
                 <div id="metricsTimeline" style="margin-top: 30px;"></div>
             </div>
 
@@ -913,6 +1137,8 @@
             await loadWhoopData();
             updateDashboard();
             renderContainerTracking();
+            await updateGoalProgress(); // Update goal progress
+            await loadMetricsTimeline(); // Load metrics history
             
             console.log('✅ App initialized');
         }
@@ -1217,25 +1443,183 @@
         }
 
         // Save metrics
+        // Metric tab switching
+        function switchMetricTab(tabName) {
+            // Hide all sections
+            document.querySelectorAll('.metric-section').forEach(section => section.classList.add('hidden'));
+            
+            // Remove active from all tabs
+            document.querySelectorAll('[id$="MetricTab"]').forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(tabName + 'MetricSection').classList.remove('hidden');
+            document.getElementById(tabName + 'MetricTab').classList.add('active');
+        }
+
+        // Save metrics with all fields
         async function saveMetrics() {
             const date = document.getElementById('metricDate').value;
-            const weight = parseFloat(document.getElementById('metricWeight').value);
-            const bodyFat = parseFloat(document.getElementById('metricBodyFat').value);
-
-            if (!date || !weight) {
-                alert('Please enter at least date and weight');
+            
+            if (!date) {
+                alert('Please select a date');
                 return;
             }
 
-            const metric = { weight, bodyFat: bodyFat || null };
-            
-            await window.dbSet(window.dbRef(window.db, `metrics/${currentProfile}/${date}`), metric);
-            
-            alert('✅ Metrics saved!');
-            loadMetricsTimeline();
+            // Collect all metric data
+            const metric = {
+                // Basic
+                weight: parseFloat(document.getElementById('metricWeight').value) || null,
+                bodyFat: parseFloat(document.getElementById('metricBodyFat').value) || null,
+                muscleMass: parseFloat(document.getElementById('metricMuscleMass').value) || null,
+                bmi: parseFloat(document.getElementById('metricBMI').value) || null,
+                visceralFat: parseInt(document.getElementById('metricVisceralFat').value) || null,
+                waist: parseFloat(document.getElementById('metricWaist').value) || null,
+                chest: parseFloat(document.getElementById('metricChest').value) || null,
+                arms: parseFloat(document.getElementById('metricArms').value) || null,
+                notes: document.getElementById('metricNotes').value || null,
+                
+                // Vitals
+                bpSystolic: parseInt(document.getElementById('metricBPSystolic').value) || null,
+                bpDiastolic: parseInt(document.getElementById('metricBPDiastolic').value) || null,
+                heartRate: parseInt(document.getElementById('metricHeartRate').value) || null,
+                glucose: parseInt(document.getElementById('metricGlucose').value) || null,
+                spo2: parseFloat(document.getElementById('metricSpO2').value) || null,
+                temperature: parseFloat(document.getElementById('metricTemp').value) || null,
+                
+                // Labs
+                cholesterol: parseInt(document.getElementById('metricCholesterol').value) || null,
+                ldl: parseInt(document.getElementById('metricLDL').value) || null,
+                hdl: parseInt(document.getElementById('metricHDL').value) || null,
+                triglycerides: parseInt(document.getElementById('metricTriglycerides').value) || null,
+                hba1c: parseFloat(document.getElementById('metricHbA1c').value) || null,
+                vitaminD: parseInt(document.getElementById('metricVitaminD').value) || null,
+                calciumScore: parseInt(document.getElementById('metricCalciumScore').value) || null,
+                creatinine: parseFloat(document.getElementById('metricCreatinine').value) || null,
+                tsh: parseFloat(document.getElementById('metricTSH').value) || null,
+                labNotes: document.getElementById('metricLabNotes').value || null,
+                
+                // Symptoms
+                kneePain: parseInt(document.getElementById('metricKneePain').value) || 0,
+                hairLoss: parseInt(document.getElementById('metricHairLoss').value) || 0,
+                energy: parseInt(document.getElementById('metricEnergy').value) || 5,
+                sleepQuality: parseInt(document.getElementById('metricSleepQuality').value) || 5,
+                symptoms: document.getElementById('metricSymptoms').value || null,
+                
+                // Photo (base64)
+                photo: null, // Will be set if photo is uploaded
+                
+                timestamp: Date.now()
+            };
+
+            // Handle photo upload
+            const photoFile = document.getElementById('metricPhoto').files[0];
+            if (photoFile) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    metric.photo = e.target.result;
+                    await window.dbSet(window.dbRef(window.db, `metrics/${currentProfile}/${date}`), metric);
+                    alert('✅ Metrics saved with photo!');
+                    loadMetricsTimeline();
+                    updateGoalProgress();
+                };
+                reader.readAsDataURL(photoFile);
+            } else {
+                await window.dbSet(window.dbRef(window.db, `metrics/${currentProfile}/${date}`), metric);
+                alert('✅ Metrics saved!');
+                loadMetricsTimeline();
+                updateGoalProgress();
+            }
         }
 
-        // Load metrics timeline
+        // Import Renpho CSV
+        function importRenphoCSV() {
+            const file = document.getElementById('renphoCSV').files[0];
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const csv = e.target.result;
+                const lines = csv.split('\n');
+                
+                // Parse CSV (assuming format: Date,Weight,BodyFat,...)
+                let imported = 0;
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const cols = line.split(',');
+                    if (cols.length < 3) continue;
+                    
+                    const date = cols[0]; // Assuming first column is date
+                    const weight = parseFloat(cols[1]);
+                    const bodyFat = parseFloat(cols[2]);
+                    
+                    if (date && weight) {
+                        const metric = {
+                            weight,
+                            bodyFat: bodyFat || null,
+                            source: 'renpho',
+                            timestamp: Date.now()
+                        };
+                        
+                        await window.dbSet(window.dbRef(window.db, `metrics/${currentProfile}/${date}`), metric);
+                        imported++;
+                    }
+                }
+                
+                alert(`✅ Imported ${imported} records from Renpho!`);
+                loadMetricsTimeline();
+                updateGoalProgress();
+            };
+            reader.readAsText(file);
+        }
+
+        // Update goal progress calculator
+        async function updateGoalProgress() {
+            const profile = profiles[currentProfile];
+            if (!profile || !profile.weight || !profile.goalWeight) {
+                return;
+            }
+
+            // Get latest weight from metrics
+            const metricsSnapshot = await window.dbGet(window.dbRef(window.db, `metrics/${currentProfile}`));
+            let currentWeight = profile.weight;
+            
+            if (metricsSnapshot.exists()) {
+                const metrics = metricsSnapshot.val();
+                const dates = Object.keys(metrics).sort().reverse();
+                if (dates.length > 0) {
+                    currentWeight = metrics[dates[0]].weight || profile.weight;
+                }
+            }
+
+            const goalWeight = profile.goalWeight;
+            const toLose = currentWeight - goalWeight;
+            const weightLost = profile.weight - currentWeight;
+            
+            // Calculate progress percentage
+            const totalToLose = profile.weight - goalWeight;
+            const progressPercent = totalToLose > 0 ? (weightLost / totalToLose) * 100 : 0;
+            
+            // Estimate days remaining (assuming 0.5kg per week = 0.07kg per day)
+            const daysRemaining = Math.ceil(toLose / 0.07);
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + daysRemaining);
+
+            // Update UI
+            document.getElementById('goalCurrentWeight').textContent = currentWeight.toFixed(1) + ' kg';
+            document.getElementById('goalTargetWeight').textContent = goalWeight.toFixed(1) + ' kg';
+            document.getElementById('goalToLose').textContent = toLose.toFixed(1) + ' kg';
+            document.getElementById('goalDays').textContent = daysRemaining;
+            document.getElementById('goalDate').textContent = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('goalProgress').style.width = Math.min(progressPercent, 100) + '%';
+            document.getElementById('goalProgressText').textContent = Math.round(progressPercent) + '% Complete';
+        }
+
+        // Load metrics timeline with all data
         async function loadMetricsTimeline() {
             try {
                 const snapshot = await window.dbGet(window.dbRef(window.db, `metrics/${currentProfile}`));
@@ -1247,7 +1631,8 @@
                 const metrics = snapshot.val();
                 const dates = Object.keys(metrics).sort().reverse();
                 
-                let html = '';
+                let html = '<h3 style="color: var(--primary); margin: 20px 0;">📊 History</h3>';
+                
                 for (const date of dates) {
                     const metric = metrics[date];
                     html += `
@@ -1256,17 +1641,14 @@
                                 ${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                             </div>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                                <div>
-                                    <div style="color: var(--text-light); font-size: 0.9em;">Weight</div>
-                                    <div style="font-size: 1.3em; font-weight: bold;">${metric.weight} kg</div>
-                                </div>
-                                ${metric.bodyFat ? `
-                                    <div>
-                                        <div style="color: var(--text-light); font-size: 0.9em;">Body Fat</div>
-                                        <div style="font-size: 1.3em; font-weight: bold;">${metric.bodyFat}%</div>
-                                    </div>
-                                ` : ''}
+                                ${metric.weight ? `<div><div style="color: var(--text-light); font-size: 0.9em;">Weight</div><div style="font-size: 1.3em; font-weight: bold;">${metric.weight} kg</div></div>` : ''}
+                                ${metric.bodyFat ? `<div><div style="color: var(--text-light); font-size: 0.9em;">Body Fat</div><div style="font-size: 1.3em; font-weight: bold;">${metric.bodyFat}%</div></div>` : ''}
+                                ${metric.bpSystolic && metric.bpDiastolic ? `<div><div style="color: var(--text-light); font-size: 0.9em;">BP</div><div style="font-size: 1.3em; font-weight: bold;">${metric.bpSystolic}/${metric.bpDiastolic}</div></div>` : ''}
+                                ${metric.kneePain > 0 ? `<div><div style="color: var(--text-light); font-size: 0.9em;">Knee Pain</div><div style="font-size: 1.3em; font-weight: bold;">${metric.kneePain}/10</div></div>` : ''}
+                                ${metric.hairLoss > 0 ? `<div><div style="color: var(--text-light); font-size: 0.9em;">Hair Loss</div><div style="font-size: 1.3em; font-weight: bold;">${metric.hairLoss}/10</div></div>` : ''}
                             </div>
+                            ${metric.photo ? `<div style="margin-top: 15px;"><img src="${metric.photo}" style="max-width: 300px; border-radius: 8px;"></div>` : ''}
+                            ${metric.notes ? `<div style="margin-top: 10px; padding: 10px; background: var(--background); border-radius: 8px;">${metric.notes}</div>` : ''}
                         </div>
                     `;
                 }
@@ -1276,6 +1658,7 @@
                 console.error('Error loading metrics:', error);
             }
         }
+
 
         // Complete day
         async function completeDay() {
