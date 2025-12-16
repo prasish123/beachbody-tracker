@@ -549,6 +549,25 @@
             <!-- Daily Tracker Tab -->
             <div class="tab-content active" id="dailyTab">
                 <h2 class="section-title">Daily Container Tracker</h2>
+
+
+            <!-- Whoop Data Display -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+            <div class="stat-card" id="recoveryCard">
+            <div class="stat-label">⌚ Whoop Recovery</div>
+            <div class="stat-value" id="whoopRecovery">--</div>
+        </div>
+            <div class="stat-card">
+                <div class="stat-label">💪 Strain</div>
+                <div class="stat-value" id="whoopStrain">--</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">😴 Sleep Score</div>
+            <div class="stat-value" id="whoopSleep">--</div>
+        </div>
+    </div>
+
+                
                 
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1548,6 +1567,77 @@
 
         // Initialize on page load
         window.addEventListener('load', init);
+
+    // ==========================================
+// Whoop Integration
+// ==========================================
+const WHOOP_API = 'https://whoop-backend-production.up.railway.app';
+
+async function loadWhoopData() {
+    try {
+        const response = await fetch(`${WHOOP_API}/api/today`);
+        if (!response.ok) {
+            console.log('Whoop not connected yet');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('Whoop data loaded:', data);
+        
+        // Display Recovery
+        if (data.recovery && data.recovery.recoveryScore !== null) {
+            const recovery = data.recovery.recoveryScore;
+            document.getElementById('whoopRecovery').textContent = recovery + '%';
+            
+            // Color code based on recovery
+            const recoveryCard = document.getElementById('recoveryCard');
+            if (recovery >= 67) {
+                recoveryCard.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            } else if (recovery >= 34) {
+                recoveryCard.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            } else {
+                recoveryCard.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            }
+        }
+        
+        // Display Strain
+        if (data.strain && data.strain.strain !== null) {
+            document.getElementById('whoopStrain').textContent = 
+                data.strain.strain.toFixed(1);
+        }
+        
+        // Display Sleep
+        if (data.sleep && data.sleep.sleepPerformance !== null) {
+            document.getElementById('whoopSleep').textContent = 
+                data.sleep.sleepPerformance + '%';
+        }
+        
+        // Auto-populate workout if detected
+        if (data.workouts && data.workouts.workouts && data.workouts.workouts.length > 0) {
+            const workout = data.workouts.workouts[0];
+            const durationInput = document.getElementById('workoutDuration');
+            if (durationInput && workout.duration && !durationInput.value) {
+                durationInput.value = workout.duration;
+            }
+        }
+        
+    } catch (error) {
+        console.log('Whoop data not available:', error.message);
+        document.getElementById('whoopRecovery').textContent = 'Connect';
+        document.getElementById('whoopRecovery').style.cursor = 'pointer';
+        document.getElementById('whoopRecovery').onclick = function() {
+            window.open(`${WHOOP_API}/auth/whoop`, '_blank');
+        };
+    }
+}
+
+// Load Whoop data when page loads
+window.addEventListener('load', async function() {
+    await loadWhoopData();
+    // Refresh every 5 minutes
+    setInterval(loadWhoopData, 5 * 60 * 1000);
+});
+        
     </script>
 </body>
 </html>
