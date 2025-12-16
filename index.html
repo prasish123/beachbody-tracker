@@ -383,6 +383,33 @@
             <!-- Dashboard Tab -->
             <div class="tab-content active" id="dashboardTab">
                 <h2 class="section-title">Today's Overview</h2>
+
+                <!-- Goal Progress Card (Compact) -->
+                <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="color: white; margin-bottom: 10px;">🎯 Goal Progress</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.85em; opacity: 0.9;">Current</div>
+                            <div style="font-size: 1.4em; font-weight: bold;" id="goalCurrentWeightDash">--</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.85em; opacity: 0.9;">Goal</div>
+                            <div style="font-size: 1.4em; font-weight: bold;" id="goalTargetWeightDash">--</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.85em; opacity: 0.9;">To Lose</div>
+                            <div style="font-size: 1.4em; font-weight: bold;" id="goalToLoseDash">--</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.85em; opacity: 0.9;">Target Date</div>
+                            <div style="font-size: 1.1em; font-weight: bold;" id="goalDateDash">--</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar" style="height: 12px; background: rgba(255,255,255,0.3);">
+                        <div class="progress-fill" id="goalProgressDash" style="width: 0%; background: white;"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 8px; font-size: 1em;" id="goalProgressTextDash">0% Complete</div>
+                </div>
                 
                 <!-- Whoop Data -->
                 <div class="stats-grid">
@@ -574,39 +601,6 @@
             <div class="tab-content" id="metricsTab">
                 <h2 class="section-title">📊 Health & Body Metrics</h2>
 
-                <!-- Goal Progress Tracker -->
-                <div class="info-box" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; margin-bottom: 30px;">
-                    <h3 style="color: white; margin-bottom: 15px;">🎯 Goal Progress</h3>
-                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                            <div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">Current Weight</div>
-                                <div style="font-size: 1.8em; font-weight: bold;" id="goalCurrentWeight">--</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">Goal Weight</div>
-                                <div style="font-size: 1.8em; font-weight: bold;" id="goalTargetWeight">--</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">To Lose</div>
-                                <div style="font-size: 1.8em; font-weight: bold;" id="goalToLose">--</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">Est. Days</div>
-                                <div style="font-size: 1.8em; font-weight: bold;" id="goalDays">--</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">Target Date</div>
-                                <div style="font-size: 1.3em; font-weight: bold;" id="goalDate">--</div>
-                            </div>
-                        </div>
-                        <div class="progress-bar" style="height: 15px; background: rgba(255,255,255,0.3);">
-                            <div class="progress-fill" id="goalProgress" style="width: 0%; background: white;"></div>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px; font-size: 1.2em; font-weight: bold;" id="goalProgressText">0% Complete</div>
-                    </div>
-                </div>
-
                 <!-- Quick Entry Tabs -->
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
                     <button class="tab active" onclick="switchMetricTab('basic')" id="basicMetricTab">Basic Metrics</button>
@@ -793,10 +787,20 @@
                         <div id="photoPreview" style="margin-top: 15px; text-align: center;"></div>
                     </div>
 
+                    <div class="info-box" style="margin-top: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                        <h4 style="color: white; margin-bottom: 10px;">🤖 AI Lab Report Reader</h4>
+                        <p style="margin-bottom: 15px; opacity: 0.9;">Upload your lab report PDF and AI will automatically extract all values!</p>
+                        <input type="file" id="labReportPDF" accept=".pdf,image/*" style="width: 100%; padding: 10px; background: white; border-radius: 8px;">
+                        <button class="btn" onclick="readLabReport()" style="margin-top: 10px; background: white; color: var(--success);">
+                            🔍 Read & Auto-Fill Lab Values
+                        </button>
+                        <div id="labReportStatus" style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px; display: none;"></div>
+                    </div>
+
                     <div class="info-box" style="margin-top: 20px;">
-                        <h4 style="margin-bottom: 10px;">📄 Upload Documents</h4>
-                        <p style="margin-bottom: 10px; color: var(--text-light);">Lab PDFs, ECG reports, Renpho data, etc.</p>
-                        <input type="file" id="metricFiles" accept=".pdf,.jpg,.png,.csv" multiple style="width: 100%; padding: 10px;">
+                        <h4 style="margin-bottom: 10px;">📄 Other Documents</h4>
+                        <p style="margin-bottom: 10px; color: var(--text-light);">ECG reports, doctor notes, prescriptions, etc.</p>
+                        <input type="file" id="metricFiles" accept=".pdf,.jpg,.png" multiple style="width: 100%; padding: 10px;">
                         <div id="filesPreview" style="margin-top: 15px;"></div>
                     </div>
 
@@ -1577,7 +1581,110 @@
             reader.readAsText(file);
         }
 
-        // Update goal progress calculator
+        // Read lab report using Claude API (AI-powered)
+        async function readLabReport() {
+            const file = document.getElementById('labReportPDF').files[0];
+            if (!file) {
+                alert('Please select a PDF or image file');
+                return;
+            }
+
+            const statusDiv = document.getElementById('labReportStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '🔄 Reading lab report with AI...';
+
+            try {
+                // Convert file to base64
+                const base64Data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = () => reject(new Error('Failed to read file'));
+                    reader.readAsDataURL(file);
+                });
+
+                const mediaType = file.type === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
+
+                // Call Claude API to extract lab values
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    {
+                                        type: mediaType === 'application/pdf' ? 'document' : 'image',
+                                        source: { type: "base64", media_type: mediaType, data: base64Data }
+                                    },
+                                    {
+                                        type: "text",
+                                        text: `Extract ALL lab values from this medical report. Return ONLY a JSON object with these fields (use null if not found):
+{
+  "cholesterol": number,
+  "ldl": number,
+  "hdl": number,
+  "triglycerides": number,
+  "hba1c": number,
+  "glucose": number,
+  "vitaminD": number,
+  "calciumScore": number,
+  "creatinine": number,
+  "tsh": number,
+  "bpSystolic": number,
+  "bpDiastolic": number
+}
+Only include values that are present in the report. Return valid JSON only, no explanation.`
+                                    }
+                                ]
+                            }
+                        ],
+                    })
+                });
+
+                const data = await response.json();
+                const textContent = data.content.find(item => item.type === 'text')?.text || '';
+                
+                // Parse JSON response
+                const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const labValues = JSON.parse(jsonMatch[0]);
+                    
+                    // Auto-fill the form
+                    let filled = 0;
+                    if (labValues.cholesterol) { document.getElementById('metricCholesterol').value = labValues.cholesterol; filled++; }
+                    if (labValues.ldl) { document.getElementById('metricLDL').value = labValues.ldl; filled++; }
+                    if (labValues.hdl) { document.getElementById('metricHDL').value = labValues.hdl; filled++; }
+                    if (labValues.triglycerides) { document.getElementById('metricTriglycerides').value = labValues.triglycerides; filled++; }
+                    if (labValues.hba1c) { document.getElementById('metricHbA1c').value = labValues.hba1c; filled++; }
+                    if (labValues.glucose) { document.getElementById('metricGlucose').value = labValues.glucose; filled++; }
+                    if (labValues.vitaminD) { document.getElementById('metricVitaminD').value = labValues.vitaminD; filled++; }
+                    if (labValues.calciumScore) { document.getElementById('metricCalciumScore').value = labValues.calciumScore; filled++; }
+                    if (labValues.creatinine) { document.getElementById('metricCreatinine').value = labValues.creatinine; filled++; }
+                    if (labValues.tsh) { document.getElementById('metricTSH').value = labValues.tsh; filled++; }
+                    if (labValues.bpSystolic) { document.getElementById('metricBPSystolic').value = labValues.bpSystolic; filled++; }
+                    if (labValues.bpDiastolic) { document.getElementById('metricBPDiastolic').value = labValues.bpDiastolic; filled++; }
+
+                    statusDiv.innerHTML = `✅ Success! Auto-filled ${filled} lab values. Review and click Save.`;
+                    statusDiv.style.background = 'rgba(16, 185, 129, 0.3)';
+                    
+                    // Switch to Labs tab to show filled values
+                    switchMetricTab('labs');
+                } else {
+                    throw new Error('Could not parse lab values');
+                }
+            } catch (error) {
+                console.error('Lab report reading error:', error);
+                statusDiv.innerHTML = '❌ Could not read report. Please fill values manually.';
+                statusDiv.style.background = 'rgba(239, 68, 68, 0.3)';
+            }
+        }
+
+        // Update goal progress calculator (both dashboard and metrics page)
         async function updateGoalProgress() {
             const profile = profiles[currentProfile];
             if (!profile || !profile.weight || !profile.goalWeight) {
@@ -1609,14 +1716,13 @@
             const targetDate = new Date();
             targetDate.setDate(targetDate.getDate() + daysRemaining);
 
-            // Update UI
-            document.getElementById('goalCurrentWeight').textContent = currentWeight.toFixed(1) + ' kg';
-            document.getElementById('goalTargetWeight').textContent = goalWeight.toFixed(1) + ' kg';
-            document.getElementById('goalToLose').textContent = toLose.toFixed(1) + ' kg';
-            document.getElementById('goalDays').textContent = daysRemaining;
-            document.getElementById('goalDate').textContent = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            document.getElementById('goalProgress').style.width = Math.min(progressPercent, 100) + '%';
-            document.getElementById('goalProgressText').textContent = Math.round(progressPercent) + '% Complete';
+            // Update Dashboard (compact version)
+            document.getElementById('goalCurrentWeightDash').textContent = currentWeight.toFixed(1) + ' kg';
+            document.getElementById('goalTargetWeightDash').textContent = goalWeight.toFixed(1) + ' kg';
+            document.getElementById('goalToLoseDash').textContent = toLose.toFixed(1) + ' kg';
+            document.getElementById('goalDateDash').textContent = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('goalProgressDash').style.width = Math.min(progressPercent, 100) + '%';
+            document.getElementById('goalProgressTextDash').textContent = Math.round(progressPercent) + '% Complete';
         }
 
         // Load metrics timeline with all data
