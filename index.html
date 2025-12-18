@@ -2475,6 +2475,9 @@ Only include values that are present in the report. Return valid JSON only, no e
         }
 
         // LibreLink 3 Integration
+        let libreAuthToken = null;
+        let librePatientId = null;
+
         async function connectLibreLink() {
             const email = document.getElementById('libreEmail').value;
             const password = document.getElementById('librePassword').value;
@@ -2489,44 +2492,196 @@ Only include values that are present in the report. Return valid JSON only, no e
             statusDiv.innerHTML = '🔄 Connecting to LibreLink...';
 
             try {
-                // Note: LibreLink API requires authentication
-                // This is a placeholder - you'll need to implement the actual API integration
-                // LibreLink unofficial API: https://github.com/DiaKEM/libre-link-up-api-client
+                // LibreLink API authentication
+                // Region: us, eu, de, fr, jp, ap, ae, au, la
+                const region = 'us'; // Change based on your region
 
-                // For now, store credentials and show success
+                const loginResponse = await fetch(`https://api-${region}.libreview.io/llu/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'product': 'llu.android',
+                        'version': '4.7.0'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    throw new Error('Login failed - check email/password');
+                }
+
+                const loginData = await loginResponse.json();
+
+                if (loginData.status !== 0) {
+                    throw new Error(loginData.error?.message || 'Login failed');
+                }
+
+                // Store auth token
+                libreAuthToken = loginData.data.authTicket.token;
+                localStorage.setItem('libreAuthToken', libreAuthToken);
                 localStorage.setItem('libreEmail', email);
-                // Note: For production, use proper secure storage!
+
+                statusDiv.innerHTML = '✅ Authenticated! Fetching glucose data...';
+
+                // Get connections (patients)
+                const connectionsResponse = await fetch(`https://api-${region}.libreview.io/llu/connections`, {
+                    headers: {
+                        'Authorization': `Bearer ${libreAuthToken}`,
+                        'product': 'llu.android',
+                        'version': '4.7.0'
+                    }
+                });
+
+                if (!connectionsResponse.ok) {
+                    throw new Error('Failed to get connections');
+                }
+
+                const connectionsData = await connectionsResponse.json();
+
+                if (connectionsData.status === 0 && connectionsData.data && connectionsData.data.length > 0) {
+                    librePatientId = connectionsData.data[0].patientId;
+                    localStorage.setItem('librePatientId', librePatientId);
+                } else {
+                    // No connections, use own account
+                    librePatientId = loginData.data.user.id;
+                    localStorage.setItem('librePatientId', librePatientId);
+                }
 
                 statusDiv.innerHTML = '✅ Connected! Fetching glucose data...';
                 statusDiv.style.background = 'rgba(16, 185, 129, 0.3)';
 
-                // Start polling for glucose data
-                setInterval(fetchLibreLinkData, 5 * 60 * 1000); // Every 5 minutes
-                await fetchLibreLinkData();
+                // Fetch data immediately
+                await fetchLibreLinkData(region);
+
+                // Start polling for glucose data every 5 minutes
+                setInterval(() => fetchLibreLinkData(region), 5 * 60 * 1000);
 
             } catch (error) {
                 console.error('LibreLink connection error:', error);
-                statusDiv.innerHTML = '❌ Connection failed. Please check credentials.';
+                statusDiv.innerHTML = `❌ ${error.message}`;
                 statusDiv.style.background = 'rgba(239, 68, 68, 0.3)';
             }
         }
 
-        async function fetchLibreLinkData() {
+        async function fetchLibreLinkData(region = 'us') {
             try {
-                // Placeholder for LibreLink API integration
-                // You'll need to implement the actual API calls here
-                // API endpoint: https://api-eu.libreview.io
+                // Load stored credentials
+                const token = libreAuthToken || localStorage.getItem('libreAuthToken');
+                const patientId = librePatientId || localStorage.getItem('librePatientId');
 
-                // For now, display a message
-                console.log('📡 Fetching LibreLink data...');
+                if (!token || !patientId) {
+                    console.log('LibreLink not authenticated');
+                    return;
+                }
 
-                // Example: Update current glucose
-                // document.getElementById('currentGlucose').textContent = '95 mg/dL';
-                // document.getElementById('glucoseTime').textContent = '5 min ago';
+                console.log('📡 Fetching LibreLink glucose data...');
+
+                // Get graph data (includes glucose readings)
+                const graphResponse = await fetch(`https://api-${region}.libreview.io/llu/connections/${patientId}/graph`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'product': 'llu.android',
+                        'version': '4.7.0'
+                    }
+                });
+
+                if (!graphResponse.ok) {
+                    throw new Error('Failed to fetch glucose data');
+                }
+
+                const graphData = await graphResponse.json();
+
+                if (graphData.status !== 0) {
+                    throw new Error('Invalid graph data');
+                }
+
+                // Get latest glucose reading
+                const connection = graphData.data.connection;
+                const glucoseMeasurement = connection.glucoseMeasurement;
+
+                if (glucoseMeasurement) {
+                    const glucose = Math.round(glucoseMeasurement.Value);
+                    const timestamp = new Date(glucoseMeasurement.Timestamp);
+                    const now = new Date();
+                    const minutesAgo = Math.round((now - timestamp) / 60000);
+
+                    // Update display
+                    document.getElementById('currentGlucose').textContent = `${glucose} mg/dL`;
+                    document.getElementById('glucoseTime').textContent = `${minutesAgo} min ago`;
+
+                    // Update stats
+                    const graphHistory = graphData.data.graphData || [];
+                    if (graphHistory.length > 0) {
+                        const todayReadings = graphHistory.filter(r => {
+                            const readingDate = new Date(r.Timestamp);
+                            return readingDate.toDateString() === now.toDateString();
+                        });
+
+                        if (todayReadings.length > 0) {
+                            const values = todayReadings.map(r => r.Value);
+                            const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+                            const max = Math.round(Math.max(...values));
+                            const min = Math.round(Math.min(...values));
+
+                            document.getElementById('avgGlucose').textContent = `${avg} mg/dL`;
+                            document.getElementById('maxGlucose').textContent = `${max} mg/dL`;
+                            document.getElementById('minGlucose').textContent = `${min} mg/dL`;
+
+                            // Render glucose chart
+                            renderGlucoseChart(todayReadings);
+                        }
+                    }
+                }
+
+                console.log('✅ LibreLink data updated');
 
             } catch (error) {
                 console.error('Error fetching LibreLink data:', error);
             }
+        }
+
+        function renderGlucoseChart(readings) {
+            const chartDiv = document.getElementById('glucoseChart');
+
+            if (readings.length === 0) {
+                chartDiv.innerHTML = '<p style="color: var(--text-light); margin: auto;">No glucose data available</p>';
+                return;
+            }
+
+            const maxGlucose = 200; // Chart ceiling
+            let html = '';
+
+            // Take last 24 readings (about 6 hours of data at 15min intervals)
+            const recentReadings = readings.slice(-24);
+
+            for (const reading of recentReadings) {
+                const value = reading.Value;
+                const height = Math.min((value / maxGlucose) * 100, 100);
+
+                // Color based on glucose level
+                let color = '#10b981'; // Green (normal)
+                if (value < 70) color = '#f59e0b'; // Orange (low)
+                else if (value > 180) color = '#ef4444'; // Red (high)
+                else if (value > 140) color = '#f59e0b'; // Orange (elevated)
+
+                const time = new Date(reading.Timestamp).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+
+                html += `
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 30px;">
+                        <div style="width: 100%; background: ${color}; height: ${height}%; border-radius: 4px 4px 0 0; min-height: 10px; position: relative;">
+                            <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: var(--text); white-space: nowrap;">${Math.round(value)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            chartDiv.innerHTML = html;
         }
 
         // Calendar functions
