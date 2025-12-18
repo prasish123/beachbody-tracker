@@ -2300,20 +2300,20 @@ Only include values that are present in the report. Return valid JSON only, no e
                     document.getElementById('whoopSleep').textContent = 'N/A';
                 }
 
-                // Fetch cycle data for resting HR and HRV
+                // Fetch cycle data for resting HR and HRV (using recovery endpoint)
                 let cycleFound = false;
                 for (const date of dates) {
                     try {
-                        const cycleResponse = await fetch(`${WHOOP_API}/api/cycle/${date}`);
-                        console.log(`📡 Cycle ${date} status:`, cycleResponse.status);
+                        const recoveryResponse = await fetch(`${WHOOP_API}/api/recovery/${date}`);
+                        console.log(`📡 Recovery ${date} status:`, recoveryResponse.status);
 
-                        if (cycleResponse.ok) {
-                            const cycleData = await cycleResponse.json();
-                            console.log('✅ Cycle data:', cycleData);
+                        if (recoveryResponse.ok) {
+                            const recoveryData = await recoveryResponse.json();
+                            console.log('✅ Recovery data (includes HR/HRV):', recoveryData);
 
-                            // Resting HR
-                            if (cycleData && cycleData.score && cycleData.score.restingHeartRate) {
-                                const restingHR = Math.round(cycleData.score.restingHeartRate);
+                            // Resting HR - directly from recovery endpoint
+                            if (recoveryData && recoveryData.restingHeartRate) {
+                                const restingHR = Math.round(recoveryData.restingHeartRate);
                                 document.getElementById('whoopRestingHR').textContent = restingHR;
                                 // Auto-fill in workout form
                                 if (!document.getElementById('workoutRestingHR').value) {
@@ -2321,21 +2321,21 @@ Only include values that are present in the report. Return valid JSON only, no e
                                 }
                             }
 
-                            // HRV
-                            if (cycleData && cycleData.score && cycleData.score.hrv) {
-                                document.getElementById('whoopHRV').textContent = Math.round(cycleData.score.hrv);
+                            // HRV - directly from recovery endpoint
+                            if (recoveryData && recoveryData.hrv) {
+                                document.getElementById('whoopHRV').textContent = Math.round(recoveryData.hrv);
                             }
 
-                            // Sleep HR (average during sleep)
-                            if (cycleData && cycleData.score && cycleData.score.averageSleepHeartRate) {
-                                document.getElementById('whoopSleepHR').textContent = Math.round(cycleData.score.averageSleepHeartRate);
+                            // Sleep HR - use resting HR as proxy (recovery endpoint format)
+                            if (recoveryData && recoveryData.restingHeartRate) {
+                                document.getElementById('whoopSleepHR').textContent = Math.round(recoveryData.restingHeartRate);
                             }
 
                             cycleFound = true;
                             break;
                         }
                     } catch (e) {
-                        console.log(`Cycle ${date} error:`, e.message);
+                        console.log(`Recovery ${date} error:`, e.message);
                     }
                 }
 
