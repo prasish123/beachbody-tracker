@@ -375,6 +375,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
                 <button class="tab" onclick="switchTab('daily')">📅 Daily Tracker</button>
+                <button class="tab" onclick="switchTab('fitness')">💪 Fitness Score</button>
                 <button class="tab" onclick="switchTab('glucose')">🩸 Glucose</button>
                 <button class="tab" onclick="switchTab('history')">📆 History</button>
                 <button class="tab" onclick="switchTab('profile')">👤 Profile</button>
@@ -547,6 +548,172 @@
                 <button class="btn hidden" id="completeDayBtn" onclick="completeDay()" style="margin-top: 20px;">
                     ✅ Complete Day
                 </button>
+            </div>
+
+            <!-- Fitness Score Tab -->
+            <div class="tab-content" id="fitnessTab">
+                <h2 class="section-title">💪 Fitness Score & Heart Rate Recovery</h2>
+
+                <!-- Overall Fitness Score -->
+                <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center;">
+                    <h3 style="color: white; margin-bottom: 10px;">Your Fitness Score</h3>
+                    <div style="font-size: 4em; font-weight: bold; margin: 20px 0;" id="overallFitnessScore">--</div>
+                    <div style="font-size: 1.2em; opacity: 0.9;" id="fitnessLevel">Calculate your first workout</div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 30px;">
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Today</div>
+                            <div style="font-size: 1.8em; font-weight: bold;" id="todayScore">--</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Week Avg</div>
+                            <div style="font-size: 1.8em; font-weight: bold;" id="weekScore">--</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Month Avg</div>
+                            <div style="font-size: 1.8em; font-weight: bold;" id="monthScore">--</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">All-Time Best</div>
+                            <div style="font-size: 1.8em; font-weight: bold;" id="bestScore">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Whoop Resting HR -->
+                <div class="stats-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card">
+                        <div class="stat-label">❤️ Resting HR (Whoop)</div>
+                        <div class="stat-value" id="whoopRestingHR">--</div>
+                        <div style="font-size: 0.9em; color: var(--text-light); margin-top: 5px;">bpm</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">💤 Avg Sleep HR</div>
+                        <div class="stat-value" id="whoopSleepHR">--</div>
+                        <div style="font-size: 0.9em; color: var(--text-light); margin-top: 5px;">bpm</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">🔋 HRV</div>
+                        <div class="stat-value" id="whoopHRV">--</div>
+                        <div style="font-size: 0.9em; color: var(--text-light); margin-top: 5px;">ms</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">📊 Workouts Today</div>
+                        <div class="stat-value" id="workoutsToday">0</div>
+                    </div>
+                </div>
+
+                <!-- Log HIIT Workout -->
+                <div style="background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">🏃 Log HIIT Workout</h3>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Workout Date & Time</label>
+                            <input type="datetime-local" id="workoutDateTime">
+                        </div>
+                        <div class="form-group">
+                            <label>Workout Type</label>
+                            <select id="workoutType">
+                                <option value="hiit">HIIT</option>
+                                <option value="running">Running</option>
+                                <option value="cycling">Cycling</option>
+                                <option value="swimming">Swimming</option>
+                                <option value="strength">Strength Training</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Resting Heart Rate (bpm)</label>
+                            <input type="number" id="workoutRestingHR" placeholder="e.g., 60">
+                            <small style="color: var(--text-light);">From Whoop or manual</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Peak Heart Rate (bpm)</label>
+                            <input type="number" id="workoutPeakHR" placeholder="e.g., 180">
+                            <small style="color: var(--text-light);">Highest during workout</small>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>⏱️ Recovery Time (mm:ss)</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="recoveryMinutes" placeholder="1" min="0" max="59" style="width: 70px;">
+                                <span style="align-self: center;">:</span>
+                                <input type="number" id="recoverySeconds" placeholder="30" min="0" max="59" style="width: 70px;">
+                            </div>
+                            <small style="color: var(--text-light);">Time to drop to resting + 10 bpm</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Workout Duration (minutes)</label>
+                            <input type="number" id="workoutDuration" placeholder="30">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes (Optional)</label>
+                        <textarea id="workoutNotes" rows="2" placeholder="How did you feel? Any PRs?"></textarea>
+                    </div>
+
+                    <button class="btn" onclick="logWorkout()">💾 Log Workout & Calculate Score</button>
+                </div>
+
+                <!-- Recovery Score Guide -->
+                <div class="info-box" style="margin-bottom: 30px;">
+                    <h4 style="color: var(--primary); margin-bottom: 15px;">📊 Fitness Score Guide</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="padding: 15px; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 8px;">
+                            <div style="font-size: 1.5em; font-weight: bold;">90-100</div>
+                            <div>Elite Recovery</div>
+                            <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">&lt;1:00 recovery</div>
+                        </div>
+                        <div style="padding: 15px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 8px;">
+                            <div style="font-size: 1.5em; font-weight: bold;">75-89</div>
+                            <div>Excellent</div>
+                            <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">1:00-1:30 recovery</div>
+                        </div>
+                        <div style="padding: 15px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 8px;">
+                            <div style="font-size: 1.5em; font-weight: bold;">60-74</div>
+                            <div>Good</div>
+                            <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">1:30-2:00 recovery</div>
+                        </div>
+                        <div style="padding: 15px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border-radius: 8px;">
+                            <div style="font-size: 1.5em; font-weight: bold;">&lt;60</div>
+                            <div>Needs Work</div>
+                            <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">&gt;2:00 recovery</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workout History -->
+                <div id="workoutHistory">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">📋 Workout History</h3>
+                    <div id="workoutHistoryList"></div>
+                </div>
+
+                <!-- Analytics Charts -->
+                <div style="margin-top: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">📈 Progress Trends</h3>
+
+                    <!-- Weekly Progress -->
+                    <div class="info-box" style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">Last 7 Days</h4>
+                        <div id="weeklyChart" style="height: 200px; display: flex; align-items: end; gap: 8px;">
+                            <p style="color: var(--text-light); margin: auto;">Log workouts to see trends</p>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Progress -->
+                    <div class="info-box">
+                        <h4 style="margin-bottom: 15px;">Monthly Average</h4>
+                        <div id="monthlyChart" style="height: 200px; display: flex; align-items: end; gap: 8px;">
+                            <p style="color: var(--text-light); margin: auto;">Log workouts to see trends</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Profile Tab -->
@@ -1280,6 +1447,7 @@
             document.getElementById('metricDate').value = today;
             document.getElementById('viewDate').value = today;
             document.getElementById('mealDateTime').value = now;
+            document.getElementById('workoutDateTime').value = now;
 
             await loadAllData();
             loadProfileForm(); // Load profile data into form
@@ -1291,6 +1459,8 @@
             await updateGoalProgress(); // Update goal progress
             await loadMetricsTimeline(); // Load metrics history
             await loadMealHistory(); // Load meal history
+            await loadWorkoutHistory(); // Load workout history
+            await loadFitnessAnalytics(); // Load fitness analytics
             renderCalendar(); // Render calendar
 
             console.log('✅ App initialized');
@@ -2129,12 +2299,61 @@ Only include values that are present in the report. Return valid JSON only, no e
                     console.log('No sleep data found for any date');
                     document.getElementById('whoopSleep').textContent = 'N/A';
                 }
-                
+
+                // Fetch cycle data for resting HR and HRV
+                let cycleFound = false;
+                for (const date of dates) {
+                    try {
+                        const cycleResponse = await fetch(`${WHOOP_API}/api/cycle/${date}`);
+                        console.log(`📡 Cycle ${date} status:`, cycleResponse.status);
+
+                        if (cycleResponse.ok) {
+                            const cycleData = await cycleResponse.json();
+                            console.log('✅ Cycle data:', cycleData);
+
+                            // Resting HR
+                            if (cycleData && cycleData.score && cycleData.score.restingHeartRate) {
+                                const restingHR = Math.round(cycleData.score.restingHeartRate);
+                                document.getElementById('whoopRestingHR').textContent = restingHR;
+                                // Auto-fill in workout form
+                                if (!document.getElementById('workoutRestingHR').value) {
+                                    document.getElementById('workoutRestingHR').value = restingHR;
+                                }
+                            }
+
+                            // HRV
+                            if (cycleData && cycleData.score && cycleData.score.hrv) {
+                                document.getElementById('whoopHRV').textContent = Math.round(cycleData.score.hrv);
+                            }
+
+                            // Sleep HR (average during sleep)
+                            if (cycleData && cycleData.score && cycleData.score.averageSleepHeartRate) {
+                                document.getElementById('whoopSleepHR').textContent = Math.round(cycleData.score.averageSleepHeartRate);
+                            }
+
+                            cycleFound = true;
+                            break;
+                        }
+                    } catch (e) {
+                        console.log(`Cycle ${date} error:`, e.message);
+                    }
+                }
+
+                if (!cycleFound) {
+                    console.log('No cycle data found for any date');
+                    document.getElementById('whoopRestingHR').textContent = 'N/A';
+                    document.getElementById('whoopHRV').textContent = 'N/A';
+                    document.getElementById('whoopSleepHR').textContent = 'N/A';
+                }
+
             } catch (error) {
                 console.error('❌ Whoop general error:', error);
                 document.getElementById('whoopRecovery').textContent = 'Error';
                 document.getElementById('whoopStrain').textContent = 'N/A';
                 document.getElementById('whoopSleep').textContent = 'N/A';
+                document.getElementById('whoopRestingHR').textContent = 'N/A';
+                document.getElementById('whoopHRV').textContent = 'N/A';
+                document.getElementById('whoopSleepHR').textContent = 'N/A';
             }
         }
 
@@ -2418,6 +2637,346 @@ Only include values that are present in the report. Return valid JSON only, no e
                 console.error('Error loading date details:', error);
                 document.getElementById('selectedDateData').innerHTML = '<p style="color: var(--danger);">Error loading data.</p>';
             }
+        }
+
+        // Fitness & Workout Tracking
+        async function logWorkout() {
+            const dateTime = document.getElementById('workoutDateTime').value;
+            const workoutType = document.getElementById('workoutType').value;
+            const restingHR = parseInt(document.getElementById('workoutRestingHR').value);
+            const peakHR = parseInt(document.getElementById('workoutPeakHR').value);
+            const recoveryMin = parseInt(document.getElementById('recoveryMinutes').value) || 0;
+            const recoverySec = parseInt(document.getElementById('recoverySeconds').value) || 0;
+            const duration = parseInt(document.getElementById('workoutDuration').value);
+            const notes = document.getElementById('workoutNotes').value;
+
+            if (!dateTime || !restingHR || !peakHR || (!recoveryMin && !recoverySec)) {
+                alert('Please fill in: date/time, resting HR, peak HR, and recovery time');
+                return;
+            }
+
+            // Calculate total recovery time in seconds
+            const recoveryTimeSeconds = (recoveryMin * 60) + recoverySec;
+
+            // Calculate fitness score (0-100)
+            const score = calculateFitnessScore(recoveryTimeSeconds, peakHR, restingHR);
+
+            const workout = {
+                dateTime,
+                workoutType,
+                restingHR,
+                peakHR,
+                recoveryTimeSeconds,
+                recoveryTimeDisplay: `${recoveryMin}:${String(recoverySec).padStart(2, '0')}`,
+                duration: duration || null,
+                notes: notes || null,
+                score: Math.round(score),
+                timestamp: Date.now()
+            };
+
+            // Save to Firebase
+            const date = dateTime.split('T')[0];
+            const workoutId = `workout_${Date.now()}`;
+            await window.dbSet(window.dbRef(window.db, `workouts/${currentProfile}/${date}/${workoutId}`), workout);
+
+            alert(`✅ Workout logged!\n\nFitness Score: ${Math.round(score)}/100\nRecovery Time: ${workout.recoveryTimeDisplay}`);
+
+            // Clear form
+            document.getElementById('recoveryMinutes').value = '';
+            document.getElementById('recoverySeconds').value = '';
+            document.getElementById('workoutPeakHR').value = '';
+            document.getElementById('workoutDuration').value = '';
+            document.getElementById('workoutNotes').value = '';
+
+            // Reload data
+            await loadWorkoutHistory();
+            await loadFitnessAnalytics();
+        }
+
+        function calculateFitnessScore(recoverySeconds, peakHR, restingHR) {
+            // Scoring based on heart rate recovery time
+            // Elite athletes: <60 seconds = 90-100
+            // Excellent: 60-90 seconds = 75-89
+            // Good: 90-120 seconds = 60-74
+            // Fair: 120-180 seconds = 40-59
+            // Needs work: >180 seconds = <40
+
+            let baseScore = 0;
+
+            if (recoverySeconds <= 60) {
+                // Elite: 90-100
+                baseScore = 100 - ((recoverySeconds / 60) * 10);
+            } else if (recoverySeconds <= 90) {
+                // Excellent: 75-89
+                baseScore = 89 - (((recoverySeconds - 60) / 30) * 14);
+            } else if (recoverySeconds <= 120) {
+                // Good: 60-74
+                baseScore = 74 - (((recoverySeconds - 90) / 30) * 14);
+            } else if (recoverySeconds <= 180) {
+                // Fair: 40-59
+                baseScore = 59 - (((recoverySeconds - 120) / 60) * 19);
+            } else {
+                // Needs work: <40
+                baseScore = Math.max(0, 40 - ((recoverySeconds - 180) / 60) * 5);
+            }
+
+            // Bonus points for higher peak HR (shows effort)
+            const hrRange = peakHR - restingHR;
+            if (hrRange > 100) {
+                baseScore += 5;
+            } else if (hrRange > 80) {
+                baseScore += 3;
+            }
+
+            return Math.min(100, Math.max(0, baseScore));
+        }
+
+        async function loadWorkoutHistory() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const snapshot = await window.dbGet(window.dbRef(window.db, `workouts/${currentProfile}/${today}`));
+
+                if (!snapshot.exists()) {
+                    document.getElementById('workoutHistoryList').innerHTML = '<p style="text-align: center; color: var(--text-light);">No workouts logged today.</p>';
+                    document.getElementById('workoutsToday').textContent = '0';
+                    return;
+                }
+
+                const workouts = snapshot.val();
+                const workoutArray = Object.values(workouts).sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+                document.getElementById('workoutsToday').textContent = workoutArray.length;
+
+                let html = '';
+                for (const workout of workoutArray) {
+                    const scoreColor = workout.score >= 90 ? 'var(--success)' :
+                                      workout.score >= 75 ? 'var(--primary)' :
+                                      workout.score >= 60 ? 'var(--warning)' : 'var(--danger)';
+
+                    html += `
+                        <div class="info-box" style="margin-bottom: 15px; border-left: 4px solid ${scoreColor};">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <div>
+                                    <strong>${workout.workoutType.toUpperCase()}</strong>
+                                    <div style="color: var(--text-light); font-size: 0.9em;">${new Date(workout.dateTime).toLocaleString()}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 2em; font-weight: bold; color: ${scoreColor};">${workout.score}</div>
+                                    <div style="font-size: 0.9em; color: var(--text-light);">Score</div>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                                <div>
+                                    <div style="color: var(--text-light); font-size: 0.9em;">Recovery Time</div>
+                                    <div style="font-size: 1.3em; font-weight: bold;">⏱️ ${workout.recoveryTimeDisplay}</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-light); font-size: 0.9em;">Peak HR</div>
+                                    <div style="font-size: 1.3em; font-weight: bold;">❤️ ${workout.peakHR} bpm</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-light); font-size: 0.9em;">Resting HR</div>
+                                    <div style="font-size: 1.3em; font-weight: bold;">💤 ${workout.restingHR} bpm</div>
+                                </div>
+                                ${workout.duration ? `<div><div style="color: var(--text-light); font-size: 0.9em;">Duration</div><div style="font-size: 1.3em; font-weight: bold;">⏲️ ${workout.duration} min</div></div>` : ''}
+                            </div>
+                            ${workout.notes ? `<div style="padding: 10px; background: var(--background); border-radius: 8px; font-style: italic;">${workout.notes}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                document.getElementById('workoutHistoryList').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading workout history:', error);
+            }
+        }
+
+        async function loadFitnessAnalytics() {
+            try {
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+
+                // Get all workouts for analytics
+                const allWorkoutsRef = window.dbRef(window.db, `workouts/${currentProfile}`);
+                const snapshot = await window.dbGet(allWorkoutsRef);
+
+                if (!snapshot.exists()) {
+                    return;
+                }
+
+                const allData = snapshot.val();
+                let allWorkouts = [];
+
+                // Flatten workouts by date
+                for (const date in allData) {
+                    for (const workoutId in allData[date]) {
+                        allWorkouts.push({ ...allData[date][workoutId], date });
+                    }
+                }
+
+                if (allWorkouts.length === 0) return;
+
+                // Sort by date
+                allWorkouts.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+                // Today's workouts
+                const todayWorkouts = allWorkouts.filter(w => w.date === todayStr);
+                const todayAvg = todayWorkouts.length > 0 ?
+                    Math.round(todayWorkouts.reduce((sum, w) => sum + w.score, 0) / todayWorkouts.length) : 0;
+
+                // Last 7 days
+                const sevenDaysAgo = new Date(today);
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                const weekWorkouts = allWorkouts.filter(w => new Date(w.date) >= sevenDaysAgo);
+                const weekAvg = weekWorkouts.length > 0 ?
+                    Math.round(weekWorkouts.reduce((sum, w) => sum + w.score, 0) / weekWorkouts.length) : 0;
+
+                // Last 30 days
+                const thirtyDaysAgo = new Date(today);
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                const monthWorkouts = allWorkouts.filter(w => new Date(w.date) >= thirtyDaysAgo);
+                const monthAvg = monthWorkouts.length > 0 ?
+                    Math.round(monthWorkouts.reduce((sum, w) => sum + w.score, 0) / monthWorkouts.length) : 0;
+
+                // All-time best
+                const bestScore = Math.max(...allWorkouts.map(w => w.score));
+
+                // Overall score (weighted: 40% last week, 30% last month, 30% best)
+                const overallScore = Math.round((weekAvg * 0.4) + (monthAvg * 0.3) + (bestScore * 0.3));
+
+                // Update display
+                document.getElementById('todayScore').textContent = todayAvg || '--';
+                document.getElementById('weekScore').textContent = weekAvg || '--';
+                document.getElementById('monthScore').textContent = monthAvg || '--';
+                document.getElementById('bestScore').textContent = bestScore || '--';
+                document.getElementById('overallFitnessScore').textContent = overallScore || '--';
+
+                // Fitness level label
+                let level = '';
+                if (overallScore >= 90) level = '🏆 Elite Athlete';
+                else if (overallScore >= 75) level = '💪 Excellent Fitness';
+                else if (overallScore >= 60) level = '👍 Good Fitness';
+                else if (overallScore >= 40) level = '📈 Improving';
+                else level = '🎯 Getting Started';
+
+                document.getElementById('fitnessLevel').textContent = level;
+
+                // Render charts
+                renderWeeklyChart(weekWorkouts);
+                renderMonthlyChart(monthWorkouts);
+
+            } catch (error) {
+                console.error('Error loading fitness analytics:', error);
+            }
+        }
+
+        function renderWeeklyChart(workouts) {
+            if (workouts.length === 0) return;
+
+            const chartDiv = document.getElementById('weeklyChart');
+            const groupedByDate = {};
+
+            // Group by date
+            workouts.forEach(w => {
+                if (!groupedByDate[w.date]) groupedByDate[w.date] = [];
+                groupedByDate[w.date].push(w.score);
+            });
+
+            // Calculate daily averages
+            const dailyAvg = {};
+            for (const date in groupedByDate) {
+                const scores = groupedByDate[date];
+                dailyAvg[date] = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+            }
+
+            // Create bars
+            let html = '';
+            const maxScore = 100;
+
+            // Get last 7 days
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                days.push(d.toISOString().split('T')[0]);
+            }
+
+            for (const date of days) {
+                const score = dailyAvg[date] || 0;
+                const height = (score / maxScore) * 100;
+                const color = score >= 90 ? '#10b981' :
+                             score >= 75 ? '#3b82f6' :
+                             score >= 60 ? '#f59e0b' : '#ef4444';
+
+                const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+
+                html += `
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                        <div style="width: 100%; background: ${color}; height: ${height}%; border-radius: 8px 8px 0 0; min-height: 20px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold; padding-bottom: 5px;">
+                            ${score > 0 ? score : ''}
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.9em; color: var(--text-light);">${dayName}</div>
+                    </div>
+                `;
+            }
+
+            chartDiv.innerHTML = html;
+        }
+
+        function renderMonthlyChart(workouts) {
+            if (workouts.length === 0) return;
+
+            const chartDiv = document.getElementById('monthlyChart');
+            const groupedByWeek = {};
+
+            // Group by week
+            workouts.forEach(w => {
+                const date = new Date(w.date);
+                const weekStart = new Date(date);
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                const weekKey = weekStart.toISOString().split('T')[0];
+
+                if (!groupedByWeek[weekKey]) groupedByWeek[weekKey] = [];
+                groupedByWeek[weekKey].push(w.score);
+            });
+
+            // Calculate weekly averages
+            const weeklyAvg = {};
+            for (const week in groupedByWeek) {
+                const scores = groupedByWeek[week];
+                weeklyAvg[week] = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+            }
+
+            // Create bars for last 4 weeks
+            let html = '';
+            const maxScore = 100;
+            const weeks = [];
+
+            for (let i = 3; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - (i * 7) - d.getDay());
+                weeks.push(d.toISOString().split('T')[0]);
+            }
+
+            for (let i = 0; i < weeks.length; i++) {
+                const weekKey = weeks[i];
+                const score = weeklyAvg[weekKey] || 0;
+                const height = (score / maxScore) * 100;
+                const color = score >= 90 ? '#10b981' :
+                             score >= 75 ? '#3b82f6' :
+                             score >= 60 ? '#f59e0b' : '#ef4444';
+
+                html += `
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                        <div style="width: 100%; background: ${color}; height: ${height}%; border-radius: 8px 8px 0 0; min-height: 20px; display: flex; align-items: end; justify-content: center; color: white; font-weight: bold; padding-bottom: 5px;">
+                            ${score > 0 ? score : ''}
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.9em; color: var(--text-light);">Week ${i + 1}</div>
+                    </div>
+                `;
+            }
+
+            chartDiv.innerHTML = html;
         }
 
         // Initialize on load
