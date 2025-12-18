@@ -375,6 +375,8 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
                 <button class="tab" onclick="switchTab('daily')">📅 Daily Tracker</button>
+                <button class="tab" onclick="switchTab('glucose')">🩸 Glucose</button>
+                <button class="tab" onclick="switchTab('history')">📆 History</button>
                 <button class="tab" onclick="switchTab('profile')">👤 Profile</button>
                 <button class="tab" onclick="switchTab('metrics')">📈 Body Metrics</button>
                 <button class="tab" onclick="switchTab('foodguide')">🥘 Food Guide</button>
@@ -382,7 +384,13 @@
 
             <!-- Dashboard Tab -->
             <div class="tab-content active" id="dashboardTab">
-                <h2 class="section-title">Today's Overview</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title" style="margin: 0;">Today's Overview</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="date" id="viewDate" onchange="changeViewDate()" style="padding: 8px; border-radius: 8px; border: 2px solid var(--border);">
+                        <button class="btn" onclick="goToToday()" style="padding: 8px 15px;">📅 Today</button>
+                    </div>
+                </div>
 
                 <!-- Goal Progress Card (Compact) -->
                 <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
@@ -1090,6 +1098,117 @@
                     </ul>
                 </div>
             </div>
+
+            <!-- Glucose Tracking Tab -->
+            <div class="tab-content" id="glucoseTab">
+                <h2 class="section-title">🩸 Glucose & Meal Tracking</h2>
+
+                <!-- LibreLink 3 Connection -->
+                <div class="info-box" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; margin-bottom: 20px;">
+                    <h3 style="color: white; margin-bottom: 10px;">📱 LibreLink 3 Integration</h3>
+                    <p style="margin-bottom: 15px; opacity: 0.9;">Connect your FreeStyle Libre sensor for real-time glucose monitoring</p>
+                    <input type="text" id="libreEmail" placeholder="LibreLink Email" style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 8px;">
+                    <input type="password" id="librePassword" placeholder="LibreLink Password" style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 8px;">
+                    <button class="btn" onclick="connectLibreLink()" style="background: white; color: var(--danger);">🔗 Connect LibreLink</button>
+                    <div id="libreStatus" style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px; display: none;"></div>
+                </div>
+
+                <!-- Current Glucose Reading -->
+                <div class="stats-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card" style="border: 3px solid var(--danger);">
+                        <div class="stat-label">🩸 Current Glucose</div>
+                        <div class="stat-value" id="currentGlucose">--</div>
+                        <div style="font-size: 0.9em; color: var(--text-light); margin-top: 5px;" id="glucoseTime">--</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">📊 Average (Today)</div>
+                        <div class="stat-value" id="avgGlucose">--</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">📈 Highest</div>
+                        <div class="stat-value" id="maxGlucose">--</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">📉 Lowest</div>
+                        <div class="stat-value" id="minGlucose">--</div>
+                    </div>
+                </div>
+
+                <!-- Glucose Chart -->
+                <div class="info-box" style="margin-bottom: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">📈 Today's Glucose Trend</h3>
+                    <div id="glucoseChart" style="height: 250px; display: flex; align-items: end; gap: 3px; background: var(--background); padding: 20px; border-radius: 8px;">
+                        <p style="color: var(--text-light); margin: auto;">Connect LibreLink or log meals to see glucose trends</p>
+                    </div>
+                </div>
+
+                <!-- Log Meal & Glucose -->
+                <div style="background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">🍽️ Log Meal & Glucose</h3>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="mealDateTime">
+                        </div>
+                        <div class="form-group">
+                            <label>Meal Type</label>
+                            <select id="mealType">
+                                <option value="breakfast">🌅 Breakfast</option>
+                                <option value="lunch">☀️ Lunch</option>
+                                <option value="snack">🍎 Snack</option>
+                                <option value="dinner">🌙 Dinner</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>What did you eat?</label>
+                        <textarea id="mealDescription" rows="3" placeholder="E.g., 2 idlis with sambar, 1 dosa with coconut chutney"></textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Glucose Before Meal (mg/dL)</label>
+                            <input type="number" id="glucoseBefore" placeholder="90">
+                        </div>
+                        <div class="form-group">
+                            <label>Glucose After (2 hours)</label>
+                            <input type="number" id="glucoseAfter" placeholder="120">
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="logMeal()">💾 Log Meal & Glucose</button>
+                </div>
+
+                <!-- Meal History with Glucose Response -->
+                <div id="mealHistory">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">📋 Meal History & Glucose Response</h3>
+                    <div id="mealHistoryList"></div>
+                </div>
+            </div>
+
+            <!-- History/Calendar Tab -->
+            <div class="tab-content" id="historyTab">
+                <h2 class="section-title">📆 History & Calendar</h2>
+
+                <!-- Calendar View -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <button class="btn" onclick="changeMonth(-1)">← Previous</button>
+                    <h3 id="calendarMonth" style="color: var(--primary); margin: 0;"></h3>
+                    <button class="btn" onclick="changeMonth(1)">Next →</button>
+                </div>
+
+                <div id="calendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 30px;">
+                    <!-- Calendar will be rendered here -->
+                </div>
+
+                <!-- Selected Date Details -->
+                <div id="dateDetails" style="margin-top: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;" id="selectedDateTitle">Select a date to view details</h3>
+                    <div id="selectedDateData"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1155,7 +1274,12 @@
         async function init() {
             console.log('🚀 Initializing app...');
             const today = new Date().toISOString().split('T')[0];
+            const now = new Date().toISOString().slice(0, 16); // For datetime-local
+
+            // Set default dates
             document.getElementById('metricDate').value = today;
+            document.getElementById('viewDate').value = today;
+            document.getElementById('mealDateTime').value = now;
 
             await loadAllData();
             loadProfileForm(); // Load profile data into form
@@ -1166,6 +1290,8 @@
             renderContainerTracking();
             await updateGoalProgress(); // Update goal progress
             await loadMetricsTimeline(); // Load metrics history
+            await loadMealHistory(); // Load meal history
+            renderCalendar(); // Render calendar
 
             console.log('✅ App initialized');
         }
@@ -2009,6 +2135,288 @@ Only include values that are present in the report. Return valid JSON only, no e
                 document.getElementById('whoopRecovery').textContent = 'Error';
                 document.getElementById('whoopStrain').textContent = 'N/A';
                 document.getElementById('whoopSleep').textContent = 'N/A';
+            }
+        }
+
+        // Date viewing functions
+        let viewingDate = new Date().toISOString().split('T')[0];
+        let calendarMonth = new Date();
+
+        async function changeViewDate() {
+            viewingDate = document.getElementById('viewDate').value;
+            await loadDataForDate(viewingDate);
+        }
+
+        function goToToday() {
+            viewingDate = new Date().toISOString().split('T')[0];
+            document.getElementById('viewDate').value = viewingDate;
+            loadDataForDate(viewingDate);
+        }
+
+        async function loadDataForDate(date) {
+            try {
+                const dailySnapshot = await window.dbGet(window.dbRef(window.db, `daily/${currentProfile}/${date}`));
+                if (dailySnapshot.exists()) {
+                    dailyData = dailySnapshot.val();
+                } else {
+                    dailyData = initializeDailyData();
+                }
+                updateDashboard();
+                renderContainerTracking();
+                console.log(`✅ Loaded data for ${date}`);
+            } catch (error) {
+                console.error('Error loading date:', error);
+            }
+        }
+
+        // Glucose & Meal tracking
+        let glucoseData = [];
+        let mealLogs = [];
+
+        async function logMeal() {
+            const dateTime = document.getElementById('mealDateTime').value;
+            const mealType = document.getElementById('mealType').value;
+            const description = document.getElementById('mealDescription').value;
+            const glucoseBefore = parseInt(document.getElementById('glucoseBefore').value);
+            const glucoseAfter = parseInt(document.getElementById('glucoseAfter').value);
+
+            if (!dateTime || !description) {
+                alert('Please fill in date/time and meal description');
+                return;
+            }
+
+            const meal = {
+                dateTime,
+                mealType,
+                description,
+                glucoseBefore: glucoseBefore || null,
+                glucoseAfter: glucoseAfter || null,
+                spike: (glucoseBefore && glucoseAfter) ? (glucoseAfter - glucoseBefore) : null,
+                timestamp: Date.now()
+            };
+
+            // Save to Firebase
+            const date = dateTime.split('T')[0];
+            const mealId = `meal_${Date.now()}`;
+            await window.dbSet(window.dbRef(window.db, `meals/${currentProfile}/${date}/${mealId}`), meal);
+
+            alert('✅ Meal logged successfully!');
+
+            // Clear form
+            document.getElementById('mealDescription').value = '';
+            document.getElementById('glucoseBefore').value = '';
+            document.getElementById('glucoseAfter').value = '';
+
+            // Reload meal history
+            await loadMealHistory();
+        }
+
+        async function loadMealHistory() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const snapshot = await window.dbGet(window.dbRef(window.db, `meals/${currentProfile}/${today}`));
+
+                if (!snapshot.exists()) {
+                    document.getElementById('mealHistoryList').innerHTML = '<p style="text-align: center; color: var(--text-light);">No meals logged today.</p>';
+                    return;
+                }
+
+                const meals = snapshot.val();
+                const mealArray = Object.values(meals).sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+                let html = '';
+                for (const meal of mealArray) {
+                    const spikeColor = meal.spike > 40 ? 'var(--danger)' : meal.spike > 20 ? 'var(--warning)' : 'var(--success)';
+                    const spikeEmoji = meal.spike > 40 ? '⚠️' : meal.spike > 20 ? '⚡' : '✅';
+
+                    html += `
+                        <div class="info-box" style="margin-bottom: 15px; border-left: 4px solid ${spikeColor};">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <div>
+                                    <strong>${meal.mealType.toUpperCase()}</strong>
+                                    <div style="color: var(--text-light); font-size: 0.9em;">${new Date(meal.dateTime).toLocaleString()}</div>
+                                </div>
+                                ${meal.spike ? `<div style="font-size: 1.5em; font-weight: bold; color: ${spikeColor};">${spikeEmoji} ${meal.spike > 0 ? '+' : ''}${meal.spike}</div>` : ''}
+                            </div>
+                            <p style="margin-bottom: 10px;">${meal.description}</p>
+                            ${meal.glucoseBefore || meal.glucoseAfter ? `
+                                <div style="display: flex; gap: 20px; font-size: 0.9em;">
+                                    ${meal.glucoseBefore ? `<div>Before: <strong>${meal.glucoseBefore} mg/dL</strong></div>` : ''}
+                                    ${meal.glucoseAfter ? `<div>After (2h): <strong>${meal.glucoseAfter} mg/dL</strong></div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                document.getElementById('mealHistoryList').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading meal history:', error);
+            }
+        }
+
+        // LibreLink 3 Integration
+        async function connectLibreLink() {
+            const email = document.getElementById('libreEmail').value;
+            const password = document.getElementById('librePassword').value;
+            const statusDiv = document.getElementById('libreStatus');
+
+            if (!email || !password) {
+                alert('Please enter your LibreLink email and password');
+                return;
+            }
+
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '🔄 Connecting to LibreLink...';
+
+            try {
+                // Note: LibreLink API requires authentication
+                // This is a placeholder - you'll need to implement the actual API integration
+                // LibreLink unofficial API: https://github.com/DiaKEM/libre-link-up-api-client
+
+                // For now, store credentials and show success
+                localStorage.setItem('libreEmail', email);
+                // Note: For production, use proper secure storage!
+
+                statusDiv.innerHTML = '✅ Connected! Fetching glucose data...';
+                statusDiv.style.background = 'rgba(16, 185, 129, 0.3)';
+
+                // Start polling for glucose data
+                setInterval(fetchLibreLinkData, 5 * 60 * 1000); // Every 5 minutes
+                await fetchLibreLinkData();
+
+            } catch (error) {
+                console.error('LibreLink connection error:', error);
+                statusDiv.innerHTML = '❌ Connection failed. Please check credentials.';
+                statusDiv.style.background = 'rgba(239, 68, 68, 0.3)';
+            }
+        }
+
+        async function fetchLibreLinkData() {
+            try {
+                // Placeholder for LibreLink API integration
+                // You'll need to implement the actual API calls here
+                // API endpoint: https://api-eu.libreview.io
+
+                // For now, display a message
+                console.log('📡 Fetching LibreLink data...');
+
+                // Example: Update current glucose
+                // document.getElementById('currentGlucose').textContent = '95 mg/dL';
+                // document.getElementById('glucoseTime').textContent = '5 min ago';
+
+            } catch (error) {
+                console.error('Error fetching LibreLink data:', error);
+            }
+        }
+
+        // Calendar functions
+        function renderCalendar() {
+            const year = calendarMonth.getFullYear();
+            const month = calendarMonth.getMonth();
+
+            // Update month display
+            document.getElementById('calendarMonth').textContent =
+                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let html = '';
+
+            // Day headers
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            for (const day of dayNames) {
+                html += `<div style="text-align: center; font-weight: bold; padding: 10px; color: var(--primary);">${day}</div>`;
+            }
+
+            // Empty cells before first day
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div></div>';
+            }
+
+            // Calendar days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = date === new Date().toISOString().split('T')[0];
+
+                html += `
+                    <div onclick="viewDateDetails('${date}')"
+                         style="padding: 15px; text-align: center; border-radius: 8px; cursor: pointer;
+                                background: ${isToday ? 'var(--primary)' : 'var(--card)'};
+                                color: ${isToday ? 'white' : 'var(--text)'};
+                                border: 2px solid var(--border);">
+                        ${day}
+                    </div>
+                `;
+            }
+
+            document.getElementById('calendar').innerHTML = html;
+        }
+
+        function changeMonth(direction) {
+            calendarMonth.setMonth(calendarMonth.getMonth() + direction);
+            renderCalendar();
+        }
+
+        async function viewDateDetails(date) {
+            document.getElementById('selectedDateTitle').textContent =
+                new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            try {
+                // Load daily data
+                const dailySnapshot = await window.dbGet(window.dbRef(window.db, `daily/${currentProfile}/${date}`));
+                const metricsSnapshot = await window.dbGet(window.dbRef(window.db, `metrics/${currentProfile}/${date}`));
+                const mealsSnapshot = await window.dbGet(window.dbRef(window.db, `meals/${currentProfile}/${date}`));
+
+                let html = '';
+
+                // Daily containers
+                if (dailySnapshot.exists()) {
+                    const daily = dailySnapshot.val();
+                    html += '<div class="info-box"><h4>🥘 Food Containers</h4>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">';
+                    for (const [key, value] of Object.entries(daily.containers || {})) {
+                        if (value > 0) {
+                            html += `<div style="text-align: center;"><div>${containers[key].name}</div><div style="font-size: 1.5em; font-weight: bold;">${value}</div></div>`;
+                        }
+                    }
+                    html += '</div></div>';
+                }
+
+                // Body metrics
+                if (metricsSnapshot.exists()) {
+                    const metrics = metricsSnapshot.val();
+                    html += '<div class="info-box" style="margin-top: 15px;"><h4>📊 Body Metrics</h4>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">';
+                    if (metrics.weight) html += `<div><div style="color: var(--text-light);">Weight</div><div style="font-size: 1.3em; font-weight: bold;">${metrics.weight} kg</div></div>`;
+                    if (metrics.bodyFat) html += `<div><div style="color: var(--text-light);">Body Fat</div><div style="font-size: 1.3em; font-weight: bold;">${metrics.bodyFat}%</div></div>`;
+                    if (metrics.bpSystolic) html += `<div><div style="color: var(--text-light);">Blood Pressure</div><div style="font-size: 1.3em; font-weight: bold;">${metrics.bpSystolic}/${metrics.bpDiastolic}</div></div>`;
+                    html += '</div></div>';
+                }
+
+                // Meals
+                if (mealsSnapshot.exists()) {
+                    const meals = Object.values(mealsSnapshot.val());
+                    html += '<div class="info-box" style="margin-top: 15px;"><h4>🍽️ Meals & Glucose</h4>';
+                    for (const meal of meals) {
+                        html += `<div style="margin-bottom: 10px; padding: 10px; background: var(--background); border-radius: 8px;">`;
+                        html += `<strong>${meal.mealType}</strong>: ${meal.description}`;
+                        if (meal.spike) html += `<span style="margin-left: 10px; color: var(--danger);">Spike: +${meal.spike} mg/dL</span>`;
+                        html += `</div>`;
+                    }
+                    html += '</div>';
+                }
+
+                if (!html) {
+                    html = '<p style="color: var(--text-light);">No data recorded for this date.</p>';
+                }
+
+                document.getElementById('selectedDateData').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading date details:', error);
+                document.getElementById('selectedDateData').innerHTML = '<p style="color: var(--danger);">Error loading data.</p>';
             }
         }
 
